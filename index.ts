@@ -1,13 +1,13 @@
 const prompt = require('prompt-sync')();
-
+import { Statement, PrepareStatementResult} from  './statements/statements';
+import {execute_statement, prepare_statement} from './statements/index';
+import {execute_meta_command, MetaCommandResult} from './metaCommands'
 enum Status{
     valid,
     invalid,
 }
 
 
-function prepare_statement(){};
-function execute_statement(){};
 function repl(): void{
     while(true){
         //REPL: read, execute, print loop
@@ -15,19 +15,17 @@ function repl(): void{
         // if it is meta statement:
         if(input === null) continue;
         if(input[0] === '.'){
-            switch(input){
-                case '.exit': {
-                    console.log('Exit Successfully. Goodbye!');
-                    return;
-                }
-                default: {
-                    console.log('Unrecognized Command');
-                    continue;
-                }
+            execute_meta_command(input);
+            continue;
+        }
+
+        const statement = new Statement();
+        switch(prepare_statement(input, statement)){
+            case PrepareStatementResult.SUCCESS:{
+
             }
         }
-        prepare_statement();
-        execute_statement();
+        execute_statement(statement);
     }
 }
 repl();
