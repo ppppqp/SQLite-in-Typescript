@@ -7,7 +7,8 @@ export enum StatementType{
 
 export enum PrepareStatementResult{
     SUCCESS,
-    UNRECOGNIZED
+    UNRECOGNIZED,
+    INVALID
 }
 
 
@@ -19,9 +20,17 @@ export enum BaseExecuteStatementResult{
 /* classes */
 export class Statement{
     type: StatementType;
-    constructor(){
-        this.type = StatementType.INVALID;
+    constructor(type?: StatementType, statement? : Statement){
+        if(type !== undefined){
+            this.type = type;
+        }else{
+            this.type = (statement?.type)? statement.type :StatementType.INVALID;
+        }
+    };
+    prepare(_: string){
+        return PrepareStatementResult.SUCCESS
     }
+    execute(){}
 }
 
 

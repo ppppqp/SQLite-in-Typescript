@@ -1,37 +1,49 @@
-import {execute_insert, InsertExecuteStatementResult} from './insert'
+import {InsertStatement} from './insert'
+import {SelectStatement} from './select'
 
 import {BaseExecuteStatementResult, Statement, StatementType, PrepareStatementResult} from './statements'
 export const ExecuteStatementResult = {
     ...BaseExecuteStatementResult, 
-    ...InsertExecuteStatementResult,
 }
 
-export function prepare_statement(input: string, statement: Statement): PrepareStatementResult{
-    if(input.substring(0, 6) === 'insert'){
-        statement.type = StatementType.INSERT;
-        return PrepareStatementResult.SUCCESS;
-    }else if(input.substring(0, 6) === 'select'){
-        statement.type = StatementType.SELECT;
-        return PrepareStatementResult.SUCCESS;
+export function prepare_statement(input: string){
+    try{
+        if(input.substring(0, 6) === 'insert'){
+            const statement = new InsertStatement(input);
+            return {result: PrepareStatementResult.SUCCESS, statement};
+        }else if(input.substring(0, 6) === 'select'){
+            const statement = new SelectStatement();
+            return {result: PrepareStatementResult.SUCCESS, statement };
+        }
+        return {result: PrepareStatementResult.UNRECOGNIZED};
+    }catch(e){
+        console.log(e.message);
+        return {result: PrepareStatementResult.INVALID};
     }
-    return PrepareStatementResult.UNRECOGNIZED;
+
 };
 
 
 export function execute_statement(statement: Statement){
-    switch(statement.type){
-        case StatementType.INSERT:{
-            console.log('INSERT!');
-            break;
+    try{
+        switch(statement.type){
+            case StatementType.INSERT:{
+                statement.execute();
+                break;
+            }
+            case StatementType.SELECT:{
+                statement.execute();
+                break;
+            }
+            case StatementType.INVALID:{
+                console.log('INVALID!')
+                break;
+            }
         }
-        case StatementType.SELECT:{
-            console.log('SELECT!');
-            break;
-        }
-        case StatementType.INVALID:{
-            console.log('INVALID!')
-        }
+    }catch(e){
+        console.log(e.message)
     }
+
 };
 
 

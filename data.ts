@@ -1,7 +1,6 @@
-const TABLE_MAX_PAGES = 100;
-const PAGE_MAX_ROWS = 100;
-
-interface Row{
+export const TABLE_MAX_PAGES = 10;
+export const PAGE_MAX_ROWS = 10;
+export interface Row{
     id: number,
     username: string,
     email: string,
@@ -31,11 +30,18 @@ class Table{
         this.pages = [];
     }
     isFull(): boolean{
-        return this.numPages === TABLE_MAX_PAGES;
+        return this.numPages === TABLE_MAX_PAGES && this.pages[TABLE_MAX_PAGES-1].isFull();
     }
     addPage(): void{
         this.numPages++;
         this.pages.push(new Page);
+    }
+    addRow(row: Row){
+        if(this.isFull()) throw Error("Table Full");
+        if(this.numPages === 0 || this.pages[this.numPages-1].isFull()){
+            this.addPage();
+        }
+        this.pages[this.numPages-1].addRow(row);
     }
 }
 

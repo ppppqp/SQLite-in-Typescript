@@ -18,14 +18,20 @@ function repl(): void{
             execute_meta_command(input);
             continue;
         }
-
-        const statement = new Statement();
-        switch(prepare_statement(input, statement)){
+        const {result, statement} = prepare_statement(input);
+        switch(result){
             case PrepareStatementResult.SUCCESS:{
-
+                break;
+            }
+            case PrepareStatementResult.UNRECOGNIZED:{
+                console.log('Unrecognized Command');
+                continue;
+            }
+            case PrepareStatementResult.INVALID:{
+                continue;
             }
         }
-        execute_statement(statement);
+        if(statement) execute_statement(statement as Statement);
     }
 }
 repl();
