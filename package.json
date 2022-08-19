@@ -1,0 +1,12 @@
+{
+  "name": "db-ts",
+  "version": "1.0.0",
+  "description": "A typescript implementation of sqlite",
+  "main": "index.ts",
+  "author": "Qiping pan <panqiping@outlook.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
+  }
+}
