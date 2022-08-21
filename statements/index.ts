@@ -16,7 +16,7 @@ export function prepare_statement(input: string){
             return {result: PrepareStatementResult.SUCCESS, statement };
         }
         return {result: PrepareStatementResult.UNRECOGNIZED};
-    }catch(e){
+    }catch(e: any){
         console.log(e.message);
         return {result: PrepareStatementResult.INVALID};
     }
@@ -24,11 +24,11 @@ export function prepare_statement(input: string){
 };
 
 
-export function execute_statement(statement: Statement){
+export async function execute_statement(statement: Statement){
     try{
         switch(statement.type){
             case StatementType.INSERT:{
-                statement.execute();
+                await statement.execute();
                 break;
             }
             case StatementType.SELECT:{
@@ -40,7 +40,7 @@ export function execute_statement(statement: Statement){
                 break;
             }
         }
-    }catch(e){
+    }catch(e: any){
         console.log(e.message)
     }
 

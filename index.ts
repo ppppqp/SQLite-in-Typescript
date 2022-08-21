@@ -1,4 +1,7 @@
 const prompt = require('prompt-sync')();
+import fs from 'fs';
+import {Blob} from 'node:buffer';
+const fsPromises = fs.promises;
 import { Statement, PrepareStatementResult} from  './statements/statements';
 import {execute_statement, prepare_statement} from './statements/index';
 import {execute_meta_command, MetaCommandResult} from './metaCommands'
@@ -7,8 +10,7 @@ enum Status{
     invalid,
 }
 
-
-function repl(): void{
+async function  repl(){
     while(true){
         //REPL: read, execute, print loop
         const input = prompt('db > ');
@@ -31,7 +33,7 @@ function repl(): void{
                 continue;
             }
         }
-        if(statement) execute_statement(statement as Statement);
+        if(statement) await execute_statement(statement as Statement);
     }
 }
 repl();

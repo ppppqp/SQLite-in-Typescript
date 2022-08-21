@@ -7,26 +7,22 @@ export class InsertStatement extends Statement{
     rowToInsert:  Row;
     constructor(input: string){
         super(StatementType.INSERT);
-        this.rowToInsert = {id: -1, username: 'invalid', email: 'invalid'};
+        this.rowToInsert = new Row(-1, 'invalid', 'invalid');
         this.prepare(input);
     };
     prepare(input: string){
         this.type = StatementType.INSERT;
         const args = input.trim().split(/\s+/);
         if(args.length !== 4) throw Error('Syntax Error!');
-        const row: Row = {
-            id: Number(args[1]),
-            username: args[2],
-            email: args[3],
-        }
+        const row = new Row(Number(args[1]), args[2], args[3]);
         this.rowToInsert = row;
         return PrepareStatementResult.SUCCESS;
     }
-    execute(){
+    async execute(){
         if(table.isFull()){
             throw Error("Table Full!");
         }
         console.log('Inserted', this.rowToInsert);
-        table.addRow(this.rowToInsert);
+        await table.addRow(this.rowToInsert);
     }
 }

@@ -1,4 +1,5 @@
 
+import { table } from "./data";
 export enum MetaCommandResult{
     SUCCESS,
     UNRECOGNIZED
@@ -11,6 +12,7 @@ export enum MetaCommandResult{
 export function execute_meta_command(input: string): MetaCommandResult{
     switch(input){
         case '.exit': {
+            table.close();
             console.log('Exit Successfully. Goodbye!');
             process.exit(MetaCommandResult.SUCCESS);
         }

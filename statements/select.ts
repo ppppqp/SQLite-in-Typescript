@@ -11,11 +11,11 @@ export class SelectStatement extends Statement{
         return PrepareStatementResult.SUCCESS;
     }
     execute(){
-        table.pages.forEach((p)=>{
-            p.rows.forEach((row)=>{
-                console.log(`( ${row.id}, ${row.username}, ${row.email})`);
-            })
-        });
+        // table.pages.forEach((p)=>{
+        //     p.rows.forEach((row)=>{
+        //         console.log(`( ${row.id}, ${row.username}, ${row.email})`);
+        //     })
+        // });
     }
 
 }
