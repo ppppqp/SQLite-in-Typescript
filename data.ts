@@ -27,10 +27,14 @@ export class Row{
 class Page{
     numRows: number;
     rows: Array<Row>;
-    constructor(){
+    constructor(pageData?: any){
         this.numRows = 0;
         this.rows = [];
-    }
+        if(pageData){
+            this.numRows = pageData.numRows;
+            this.rows = pageData.rows;
+        }
+    } 
     isFull(): boolean{
         return this.numRows === PAGE_MAX_ROWS;
     }
@@ -42,13 +46,11 @@ class Page{
 class Pager{
     pages: Record<number, Page>;
     fileName: string;
-    fileHandle: any;//fs.promises.FileHandle | undefined;
+    fd: number;
     fileLength: number;
     numPages: number;
-    connected: boolean;
     constructor (fileName: string){
         this.fileName = fileName;
-        this.connected = false;
         if(fs.existsSync(fileName)){
             // if the file exists, get the file size
             const stats = fs.statSync(fileName);
@@ -57,23 +59,20 @@ class Pager{
             // otherwise the file size should be 0
             this.fileLength = 0;
         }
+        this.fd = fs.openSync(fileName, 'r+');
         this.pages = {}; // empty cache at the start
         this.numPages = Math.ceil(this.fileLength / PAGE_SIZE);
     };
-    async connect(){
-        // to synchornously initialize file handler
-        // open the db file in read/write mode. If it doesn't exist, create the file with user r/w permission.
-        try{
-            this.fileHandle = await fsPromises.open('data.db', 'r+');
-        }catch(e){
-            console.log(e)
-        } //fs.constants.O_RDWR|fs.constants.O_CREAT, fs.constants.S_IWUSR|fs.constants.S_IRUSR);
+    getNumRows(){
+        const buffer = Buffer.alloc(ROW_COUNT_SIZE);
+        fs.readSync(this.fd, buffer, 0, buffer.length, 0);
+        return Number(buffer.toString().trim());
     }
-    async getPage(pageNum: number){
-        if(!this.connected){
-            await this.connect();
-            this.connected = true;
-        }
+    updateNumRows(rowNum: number){
+        const buffer = Buffer.from(String(rowNum).padEnd(ROW_COUNT_SIZE-1) + '\n');
+        fs.writeSync(this.fd, buffer, 0, buffer.length, 0);
+    }
+    getPage(pageNum: number){
         if(pageNum > TABLE_MAX_PAGES || pageNum < 0){
             throw Error(`page number ${pageNum} out of bounds"`);
         }
@@ -82,15 +81,14 @@ class Pager{
             return this.pages[pageNum];
         }else{
             //cache miss, read from the file
-            const buffer = Buffer.alloc(ROW_SIZE);
+            const buffer = Buffer.alloc(PAGE_SIZE);
             console.log('pageNum',pageNum);
-            await this.fileHandle?.read(buffer, 0, buffer.length, pageNum * PAGE_SIZE);
-            console.log(ROW_SIZE)
+            fs.readSync(this.fd, buffer, 0, buffer.length, ROW_COUNT_SIZE + pageNum * PAGE_SIZE);
             debugWrapper(()=>console.log("page read:", buffer.toString()));
             const pageData = buffer.toString();
             let page: any;
             try{
-                page = JSON.parse(pageData);
+                page = new Page(JSON.parse(pageData));
             }catch(e){
                 page = new Page;
             }
@@ -100,18 +98,19 @@ class Pager{
             //
         }
     }
-    async flush(){
+    flush(){
         debugWrapper(()=>console.log("PAGE CACHE: ",this.pages));
         const pageNumList = Object.keys(this.pages);
         for(let pageNum of pageNumList){
             const buffer = Buffer.from(JSON.stringify(this.pages[Number(pageNum)]).padEnd(PAGE_SIZE-1)+'\n');
             console.log(buffer.toString());
-            await this.fileHandle?.write(buffer, 0, buffer.length, Number(pageNum) * PAGE_SIZE);
+            fs.writeSync(this.fd, buffer, 0, buffer.length, ROW_COUNT_SIZE + Number(pageNum) * PAGE_SIZE);
         }
     }
-    async close(){
-        await this.flush();
-        this.fileHandle?.close();
+    close(){
+        
+        this.flush();
+        fs.closeSync(this.fd);
     }
 }
 
@@ -121,28 +120,28 @@ class Table{
     pager: Pager;
     constructor(fileName: string){
         this.pager = new Pager(fileName);
-        // const fd = fs.openSync(fileName, 'r');
-        // const buffer = Buffer.alloc(ROW_COUNT_SIZE);
-        // fs.readSync(fd, buffer, 0, buffer.length, 0);
-        // this.numRows = Number(buffer.toString());
-        this.numRows = 0;
-        this.numPages = 0;
+        this.numRows = this.pager.getNumRows();
+        console.log('numRows here', this.numRows);
 
+        this.numPages = 0;
     }
     isFull(): boolean{
         return this.numRows === PAGE_MAX_ROWS * TABLE_MAX_PAGES;
     }
 
-    async addRow(row: Row){
+    addRow(row: Row){
         if(this.isFull()) throw Error("Table Full");
         // append to the last row at this moment
-        const page = await this.pager.getPage(Math.floor(this.numRows / PAGE_MAX_ROWS));
+        console.log('numRows', this.numRows);
+        const page = this.pager.getPage(Math.floor(this.numRows / PAGE_MAX_ROWS));
         page.addRow(row);
+        this.numRows ++;
         console.log(page);
     }
     
-    async close(){
-        await this.pager.close();
+    close(){
+        this.pager.updateNumRows(this.numRows);
+        this.pager.close();
     }
 }
 

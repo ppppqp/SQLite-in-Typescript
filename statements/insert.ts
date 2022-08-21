@@ -19,11 +19,11 @@ export class InsertStatement extends Statement{
         this.rowToInsert = row;
         return PrepareStatementResult.SUCCESS;
     }
-    async execute(){
+    execute(){
         if(table.isFull()){
             throw Error("Table Full!");
         }
         debugWrapper(()=>console.log('Inserted', this.rowToInsert))
-        await table.addRow(this.rowToInsert);
+        table.addRow(this.rowToInsert);
     }
 }

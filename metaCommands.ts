@@ -9,10 +9,10 @@ export enum MetaCommandResult{
 
 
 
-export async function execute_meta_command(input: string){
+export function execute_meta_command(input: string){
     switch(input){
         case '.exit': {
-            await table.close();
+            table.close();
             console.log('Exit Successfully. Goodbye!');
             process.exit(MetaCommandResult.SUCCESS);
         }

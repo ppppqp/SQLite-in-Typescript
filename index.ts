@@ -10,14 +10,14 @@ enum Status{
     invalid,
 }
 
-async function  repl(){
+function  repl(){
     while(true){
         //REPL: read, execute, print loop
         const input = prompt('db > ');
         // if it is meta statement:
         if(input === null) continue;
         if(input[0] === '.'){
-            await execute_meta_command(input);
+            execute_meta_command(input);
             continue;
         }
         const {result, statement} = prepare_statement(input);
@@ -33,7 +33,7 @@ async function  repl(){
                 continue;
             }
         }
-        if(statement) await execute_statement(statement as Statement);
+        if(statement) execute_statement(statement as Statement);
     }
 }
 repl();

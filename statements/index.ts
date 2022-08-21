@@ -24,11 +24,11 @@ export function prepare_statement(input: string){
 };
 
 
-export async function execute_statement(statement: Statement){
+export function execute_statement(statement: Statement){
     try{
         switch(statement.type){
             case StatementType.INSERT:{
-                await statement.execute();
+                statement.execute();
                 break;
             }
             case StatementType.SELECT:{
