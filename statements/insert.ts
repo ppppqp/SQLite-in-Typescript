@@ -1,5 +1,6 @@
 import {Row, table} from '../data';
 import {Statement, StatementType, PrepareStatementResult} from './statements'
+import { debugWrapper } from '../utils/debugWrapper';
 export enum InsertExecuteStatementResult{
     TABLE_FULL = 'TABLE_FULL',
 }
@@ -22,7 +23,7 @@ export class InsertStatement extends Statement{
         if(table.isFull()){
             throw Error("Table Full!");
         }
-        console.log('Inserted', this.rowToInsert);
+        debugWrapper(()=>console.log('Inserted', this.rowToInsert))
         await table.addRow(this.rowToInsert);
     }
 }

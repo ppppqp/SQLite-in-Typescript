@@ -1,4 +1,4 @@
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({sigint: true});
 import fs from 'fs';
 import {Blob} from 'node:buffer';
 const fsPromises = fs.promises;
@@ -17,7 +17,7 @@ async function  repl(){
         // if it is meta statement:
         if(input === null) continue;
         if(input[0] === '.'){
-            execute_meta_command(input);
+            await execute_meta_command(input);
             continue;
         }
         const {result, statement} = prepare_statement(input);
