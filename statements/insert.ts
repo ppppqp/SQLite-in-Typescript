@@ -1,4 +1,4 @@
-import {Row, table} from '../data';
+import { Row, table, Cursor } from '../data';
 import {Statement, StatementType, PrepareStatementResult} from './statements'
 import { debugWrapper } from '../utils/debugWrapper';
 export enum InsertExecuteStatementResult{
@@ -24,6 +24,8 @@ export class InsertStatement extends Statement{
             throw Error("Table Full!");
         }
         debugWrapper(()=>console.log('Inserted', this.rowToInsert))
-        table.addRow(this.rowToInsert);
+        const cursor = new Cursor(table);
+        cursor.toEnd();
+        table.addRow(this.rowToInsert, cursor);
     }
 }

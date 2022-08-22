@@ -15,13 +15,22 @@ export class Row{
     id: string;
     username: string;
     email: string;
-    constructor(id: number, username: string, email: string){
+    constructor(id?: number, username?: string, email?: string){
+        if(id === undefined) id = -1;
+        if(username === undefined) username = '';
+        if(email === undefined) email = '';
+
         this.id = String(id).padStart(5, '0');
         if(username.length > SCHEMA_SIZE.USERNAME_SIZE) throw Error('Username too long!');
         if(email.length > SCHEMA_SIZE.EMAIL_SIZE) throw Error('Email too long!');
 
         this.username = username.padEnd(SCHEMA_SIZE.USERNAME_SIZE); // pad to the schema length
         this.email = email.padEnd(SCHEMA_SIZE.EMAIL_SIZE);
+    }
+    copyFrom(row:Row){
+        this.id = row.id;
+        this.username = row.username;
+        this.email = row.email;
     }
 }
 class Page{
@@ -84,7 +93,7 @@ class Pager{
             const buffer = Buffer.alloc(PAGE_SIZE);
             console.log('pageNum',pageNum);
             fs.readSync(this.fd, buffer, 0, buffer.length, ROW_COUNT_SIZE + pageNum * PAGE_SIZE);
-            debugWrapper(()=>console.log("page read:", buffer.toString()));
+            // debugWrapper(()=>console.log("page read:", buffer.toString()));
             const pageData = buffer.toString();
             let page: any;
             try{
@@ -114,6 +123,37 @@ class Pager{
     }
 }
 
+export class Cursor{
+    rowNum!: number;
+    isEnd!: boolean;
+    table!: Table;
+    constructor(table:Table){
+        this.table = table;
+        this.toStart();
+    }
+    toStart(){
+        this.rowNum = 0;
+        this.isEnd = (table.numRows == 0);
+    }
+    toEnd(){
+        this.rowNum = table.numRows;
+        this.isEnd = true;
+    }
+    getValue(){
+        const page = table.pager.getPage(Math.floor(this.rowNum/PAGE_MAX_ROWS));
+        if(this.isEnd){
+            // create a new row
+            console.log(page);
+            page.addRow(new Row());
+        }
+        return page.rows[this.rowNum%PAGE_MAX_ROWS];
+    }
+    advance(){
+        this.rowNum++;
+        if(this.rowNum == this.table.numRows) this.isEnd = true;
+        if(this.rowNum > this.table.numRows) throw Error('Cursor out of boundary!');
+    }
+}
 class Table{
     numPages: number;
     numRows: number;
@@ -129,14 +169,12 @@ class Table{
         return this.numRows === PAGE_MAX_ROWS * TABLE_MAX_PAGES;
     }
 
-    addRow(row: Row){
+    addRow(row: Row, cursor: Cursor){
         if(this.isFull()) throw Error("Table Full");
-        // append to the last row at this moment
-        console.log('numRows', this.numRows);
-        const page = this.pager.getPage(Math.floor(this.numRows / PAGE_MAX_ROWS));
-        page.addRow(row);
+        // BUGGY: should assume insert, not append
+        const rowToAdd = cursor.getValue();
+        rowToAdd.copyFrom(row);
         this.numRows ++;
-        console.log(page);
     }
     
     close(){
